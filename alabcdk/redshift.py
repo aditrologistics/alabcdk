@@ -224,7 +224,7 @@ class RedshiftServerless(RedshiftBase):
             aws_region: str,
             admin_password: str = None,
             base_capacity: int = 32,
-            max_query_execution_time: int = 360,
+            max_query_execution_time: int = 300,
             **kwargs):
         super().__init__(scope, id, vpc=vpc, master_username=master_username, admin_password=admin_password, **kwargs)
 
@@ -243,7 +243,7 @@ class RedshiftServerless(RedshiftBase):
 
         isolated_subnets = [subnet.subnet_id for subnet in self.vpc.isolated_subnets]
 
-        # Set max query execution time. Default to 360 sec
+        # Set max query execution time. Default to 300 sec
         config_parameter_property = aws_redshiftserverless.CfnWorkgroup.ConfigParameterProperty(
             parameter_key="max_query_execution_time",
             parameter_value=str(max_query_execution_time)
