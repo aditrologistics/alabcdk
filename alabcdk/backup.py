@@ -1,3 +1,4 @@
+from __future__ import annotations
 from constructs import Construct
 from aws_cdk import (
     aws_backup as backup,
@@ -6,7 +7,6 @@ from aws_cdk import (
     Duration
 )
 from .utils import gen_name
-from __future__ import annotations
 
 '''
 Example how to use this module
