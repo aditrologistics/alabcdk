@@ -3,7 +3,7 @@ from constructs import Construct
 from aws_cdk import (
     aws_backup as backup,
     aws_events as events,
-    aws_iam as iam,
+    #aws_iam as iam,
     Duration
 )
 from .utils import gen_name
@@ -80,28 +80,28 @@ class BackupPlan(backup.BackupPlan):
             resource_list.append(backup.BackupResource.from_arn(backup_resource_arn))
 
         # Create a role to attach to the selections resources
-        self.role = iam.Role(
-            self,
-            f"{id}-aws-backup-role",
-            assumed_by=iam.ServicePrincipal("backup.amazonaws.com"),
-            managed_policies=[
-                iam.ManagedPolicy.from_managed_policy_arn(
-                    self,
-                    f"{id}-mp-s3-backup",
-                    managed_policy_arn="arn:aws:iam::aws:policy/AWSBackupServiceRolePolicyForS3Backup",
-                ),
-                iam.ManagedPolicy.from_managed_policy_arn(
-                    self,
-                    f"{id}-mp-s3-restore",
-                    managed_policy_arn="arn:aws:iam::aws:policy/AWSBackupServiceRolePolicyForS3Restore",
-                )
-            ]
-        )
+        # self.role = iam.Role(
+        #     self,
+        #     f"{id}-aws-backup-role",
+        #     assumed_by=iam.ServicePrincipal("backup.amazonaws.com"),
+        #     managed_policies=[
+        #         iam.ManagedPolicy.from_managed_policy_arn(
+        #             self,
+        #             f"{id}-mp-s3-backup",
+        #             managed_policy_arn="arn:aws:iam::aws:policy/AWSBackupServiceRolePolicyForS3Backup",
+        #         ),
+        #         iam.ManagedPolicy.from_managed_policy_arn(
+        #             self,
+        #             f"{id}-mp-s3-restore",
+        #             managed_policy_arn="arn:aws:iam::aws:policy/AWSBackupServiceRolePolicyForS3Restore",
+        #         )
+        #     ]
+        # )
 
         self.add_selection(
             f"{id}-backup-resources",
             resources=resource_list,
-            role=self.role,
+            #role=self.role,
             allow_restores=True)
 
     def add_backup_rule(self, cron_expression: str, retentation_period_days: int) -> None:
