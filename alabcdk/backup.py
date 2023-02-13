@@ -33,6 +33,8 @@ class BackupPlan(backup.BackupPlan):
             *,
             backup_resource_arn: str = None,
             backup_resource_arns: list[str] = None,
+            completion_window_hours: int = 8,
+            start_window_hours: int = 4,
             vault: backup.BackupVault = None,
             PITR_retention_period_days: int = None,
             **kwargs) -> None:
@@ -58,6 +60,10 @@ class BackupPlan(backup.BackupPlan):
 
 
         """
+
+        self.completion_window = Duration.hours(completion_window_hours)
+        self.start_window = Duration.hours(start_window_hours)
+
         if PITR_retention_period_days is not None:
             self.add_rule(backup.BackupPlanRule(
                 rule_name=f"{id}-PITR-rule",
@@ -107,4 +113,6 @@ class BackupPlan(backup.BackupPlan):
         schedule = events.Schedule.expression(f"cron({cron_expression})")
         self.add_rule(backup.BackupPlanRule(
             schedule_expression=schedule,
+            completion_window=self.completion_window,
+            start_window=self.start_window,
             delete_after=Duration.days(retentation_period_days)))
