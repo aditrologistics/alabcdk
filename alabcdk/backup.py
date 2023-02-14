@@ -98,11 +98,12 @@ class BackupPlan(backup.BackupPlan):
         #     ]
         # )
 
-        self.add_selection(
-            f"{id}-backup-resources",
-            resources=resource_list,
-            #role=self.role,
-            allow_restores=True)
+        for i, br in enumerate(resource_list, 1):
+            self.add_selection(
+                f"{id}-backup-resource-{i}",
+                resources=[br],
+                #role=self.role,
+                allow_restores=True)
 
     def add_backup_rule(self, cron_expression: str, retentation_period_days: int) -> None:
         '''
