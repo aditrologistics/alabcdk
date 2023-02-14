@@ -79,6 +79,7 @@ class BackupPlan(backup.BackupPlan):
         if backup_resource_arn is not None:
             resource_list.append(backup.BackupResource.from_arn(backup_resource_arn))
 
+        print(f"Resource list: {resource_list}")
         # Create a role to attach to the selections resources
         # self.role = iam.Role(
         #     self,
@@ -99,6 +100,7 @@ class BackupPlan(backup.BackupPlan):
         # )
 
         for i, br in enumerate(resource_list, 1):
+            print(f"Backup stuff {i}: {br}")
             self.add_selection(
                 f"{id}-backup-resource-{i}",
                 resources=[br],
