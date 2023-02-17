@@ -3,7 +3,7 @@ from constructs import Construct
 from aws_cdk import (
     aws_backup as backup,
     aws_events as events,
-    #aws_iam as iam,
+    aws_iam as iam,
     Duration
 )
 from .utils import gen_name
@@ -79,33 +79,42 @@ class BackupPlan(backup.BackupPlan):
         if backup_resource_arn is not None:
             resource_list.append(backup.BackupResource.from_arn(backup_resource_arn))
 
-        print(f"Resource list: {resource_list}")
         # Create a role to attach to the selections resources
-        # self.role = iam.Role(
-        #     self,
-        #     f"{id}-aws-backup-role",
-        #     assumed_by=iam.ServicePrincipal("backup.amazonaws.com"),
-        #     managed_policies=[
-        #         iam.ManagedPolicy.from_managed_policy_arn(
-        #             self,
-        #             f"{id}-mp-s3-backup",
-        #             managed_policy_arn="arn:aws:iam::aws:policy/AWSBackupServiceRolePolicyForS3Backup",
-        #         ),
-        #         iam.ManagedPolicy.from_managed_policy_arn(
-        #             self,
-        #             f"{id}-mp-s3-restore",
-        #             managed_policy_arn="arn:aws:iam::aws:policy/AWSBackupServiceRolePolicyForS3Restore",
-        #         )
-        #     ]
-        # )
+        self.role = iam.Role(
+            self,
+            f"{id}-aws-backup-role",
+            assumed_by=iam.ServicePrincipal("backup.amazonaws.com"),
+            managed_policies=[
+                iam.ManagedPolicy.from_managed_policy_arn(
+                    self,
+                    f"{id}-mp-s3-backup",
+                    managed_policy_arn="arn:aws:iam::aws:policy/AWSBackupServiceRolePolicyForS3Backup",
+                ),
+                iam.ManagedPolicy.from_managed_policy_arn(
+                    self,
+                    f"{id}-mp-s3-restore",
+                    managed_policy_arn="arn:aws:iam::aws:policy/AWSBackupServiceRolePolicyForS3Restore",
+                ),
+                iam.ManagedPolicy.from_managed_policy_arn(
+                    self,
+                    f"{id}-mp-backup",
+                    managed_policy_arn="arn:aws:iam::aws:policy/service-role/AWSBackupServiceRolePolicyForBackup"
+                ),
+                iam.ManagedPolicy.from_managed_policy_arn(
+                    self,
+                    f"{id}-mp-restore",
+                    managed_policy_arn="arn:aws:iam::aws:policy/service-role/AWSBackupServiceRolePolicyForRestores"
+                )
+            ]
+        )
 
         for i, br in enumerate(resource_list, 1):
-            print(f"Backup stuff {i}: {br}")
             self.add_selection(
                 f"{id}-backup-resource-{i}",
                 resources=[br],
-                #role=self.role,
+                role=self.role,
                 allow_restores=True)
+
 
     def add_backup_rule(self, cron_expression: str, retentation_period_days: int) -> None:
         '''
