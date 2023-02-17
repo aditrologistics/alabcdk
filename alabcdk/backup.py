@@ -87,22 +87,22 @@ class BackupPlan(backup.BackupPlan):
             managed_policies=[
                 iam.ManagedPolicy.from_managed_policy_arn(
                     self,
-                    f"{id}-mp-s3-backup",
+                    f"s3-backup-{id}",
                     managed_policy_arn="arn:aws:iam::aws:policy/AWSBackupServiceRolePolicyForS3Backup",
                 ),
                 iam.ManagedPolicy.from_managed_policy_arn(
                     self,
-                    f"{id}-mp-s3-restore",
+                    f"s3-restore-{id}",
                     managed_policy_arn="arn:aws:iam::aws:policy/AWSBackupServiceRolePolicyForS3Restore",
                 ),
                 iam.ManagedPolicy.from_managed_policy_arn(
                     self,
-                    f"{id}-mp-backup",
+                    f"backup-{id}",
                     managed_policy_arn="arn:aws:iam::aws:policy/service-role/AWSBackupServiceRolePolicyForBackup"
                 ),
                 iam.ManagedPolicy.from_managed_policy_arn(
                     self,
-                    f"{id}-mp-restore",
+                    f"restore-{id}",
                     managed_policy_arn="arn:aws:iam::aws:policy/service-role/AWSBackupServiceRolePolicyForRestores"
                 )
             ]
