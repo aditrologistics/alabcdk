@@ -3,7 +3,7 @@ from constructs import Construct
 from aws_cdk import (
     aws_backup as backup,
     aws_events as events,
-    #aws_iam as iam,
+    aws_iam as iam,
     Duration
 )
 from .utils import gen_name
@@ -80,30 +80,33 @@ class BackupPlan(backup.BackupPlan):
             resource_list.append(backup.BackupResource.from_arn(backup_resource_arn))
 
         # Create a role to attach to the selections resources
-        # self.role = iam.Role(
-        #     self,
-        #     f"{id}-aws-backup-role",
-        #     assumed_by=iam.ServicePrincipal("backup.amazonaws.com"),
-        #     managed_policies=[
-        #         iam.ManagedPolicy.from_managed_policy_arn(
-        #             self,
-        #             f"{id}-mp-s3-backup",
-        #             managed_policy_arn="arn:aws:iam::aws:policy/AWSBackupServiceRolePolicyForS3Backup",
-        #         ),
-        #         iam.ManagedPolicy.from_managed_policy_arn(
-        #             self,
-        #             f"{id}-mp-s3-restore",
-        #             managed_policy_arn="arn:aws:iam::aws:policy/AWSBackupServiceRolePolicyForS3Restore",
-        #         )
-        #     ]
-        # )
+        # The CDK will add additional service policies to this role under the hood,
+        # but we need to add the S3 ones explicitly to make it work for S3 backup
+        self.role = iam.Role(
+            self,
+            f"{id}-aws-backup-role",
+            assumed_by=iam.ServicePrincipal("backup.amazonaws.com"),
+            managed_policies=[
+                iam.ManagedPolicy.from_managed_policy_arn(
+                    self,
+                    f"s3-backup-{id}",
+                    managed_policy_arn="arn:aws:iam::aws:policy/AWSBackupServiceRolePolicyForS3Backup",
+                ),
+                iam.ManagedPolicy.from_managed_policy_arn(
+                    self,
+                    f"s3-restore-{id}",
+                    managed_policy_arn="arn:aws:iam::aws:policy/AWSBackupServiceRolePolicyForS3Restore",
+                )
+            ]
+        )
 
         for i, br in enumerate(resource_list, 1):
             self.add_selection(
                 f"{id}-backup-resource-{i}",
                 resources=[br],
-                #role=self.role,
+                role=self.role,
                 allow_restores=True)
+
 
     def add_backup_rule(self, cron_expression: str, retentation_period_days: int) -> None:
         '''
