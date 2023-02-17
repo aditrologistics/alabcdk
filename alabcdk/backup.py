@@ -80,6 +80,8 @@ class BackupPlan(backup.BackupPlan):
             resource_list.append(backup.BackupResource.from_arn(backup_resource_arn))
 
         # Create a role to attach to the selections resources
+        # The CDK will add additional service policies to this role under the hood,
+        # but we need to add the S3 ones explicitly to make it work for S3 backup
         self.role = iam.Role(
             self,
             f"{id}-aws-backup-role",
@@ -94,16 +96,6 @@ class BackupPlan(backup.BackupPlan):
                     self,
                     f"s3-restore-{id}",
                     managed_policy_arn="arn:aws:iam::aws:policy/AWSBackupServiceRolePolicyForS3Restore",
-                ),
-                iam.ManagedPolicy.from_managed_policy_arn(
-                    self,
-                    f"backup-{id}",
-                    managed_policy_arn="arn:aws:iam::aws:policy/service-role/AWSBackupServiceRolePolicyForBackup"
-                ),
-                iam.ManagedPolicy.from_managed_policy_arn(
-                    self,
-                    f"restore-{id}",
-                    managed_policy_arn="arn:aws:iam::aws:policy/service-role/AWSBackupServiceRolePolicyForRestores"
                 )
             ]
         )
