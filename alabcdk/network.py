@@ -6,3 +6,7 @@ from constructs import Construct
 def fetch_vpc(scope: Construct, id: str, *, vpc_name: str) -> ec2.IVpc:
   return ec2.Vpc.from_lookup(scope, id, vpc_name=vpc_name)
 
+def get_private_subnet_ids(vpc: ec2.IVpc) -> list[str]:
+  isolated_subnet_ids = [subnet.subnet_id for subnet in vpc.isolated_subnets]
+  private_subnet_ids = [subnet.subnet_id for subnet in vpc.private_subnets]
+  return isolated_subnet_ids + private_subnet_ids
