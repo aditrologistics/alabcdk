@@ -15,6 +15,7 @@ from aws_cdk import (
     aws_certificatemanager)
 
 from .utils import (gen_name, get_params, filter_kwargs, generate_output)
+from .network import fetch_vpc # noqa401
 from .lambdas import Function, PipLayers  # noqa401
 from .dynamodb import Table  # noqa401
 from .sqs import Queue  # noqa401
