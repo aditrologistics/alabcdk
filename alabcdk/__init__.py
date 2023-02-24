@@ -28,6 +28,7 @@ from .redshift import RedshiftServerless, RedshiftCluster # noqa401
 from .billing import BillingAlert # noqa401
 from .backup import BackupPlan # noqa401
 from .data_ingestion_api import ApiDomain, DataIngestionApi # noqa401
+from .secret import define_db_secret # noqa401
 
 class Rule(aws_events.Rule):
     def __init__(
