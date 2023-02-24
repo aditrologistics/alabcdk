@@ -66,7 +66,9 @@ class RedshiftBase(Construct):
             "username": username,
         }
         gen_secret = aws_secretsmanager.SecretStringGenerator(secret_string_template=json.dumps(secret_structure),
-                                                              generate_string_key="password")
+                                                              generate_string_key="password",
+                                                              exclude_punctuation=True,
+                                                              password_length=32)
         set_secret = {
             "engine": SecretValue.unsafe_plain_text("redshift"),
             "host": SecretValue.unsafe_plain_text(host),
@@ -74,7 +76,7 @@ class RedshiftBase(Construct):
         }
         if password is not None:
             set_secret["password"] = SecretValue.unsafe_plain_text(password)
-            
+
         cluster_secret = aws_secretsmanager.Secret(
             self,
             gen_name(self, name),
