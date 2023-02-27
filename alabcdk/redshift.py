@@ -8,6 +8,7 @@ from aws_cdk import (
     aws_secretsmanager,
     aws_ec2,
     aws_iam,
+    aws_kms as kms,
     aws_redshift,
     aws_redshiftserverless
 )
@@ -164,6 +165,7 @@ class RedshiftCluster(RedshiftBase):
             db_name: str,
             master_username: str,
             admin_password: str = None,
+            encryption_key: kms.IKey = None,
             **kwargs):
         super().__init__(scope, id, vpc=vpc, master_username=master_username, admin_password=admin_password, **kwargs)
 
@@ -194,6 +196,8 @@ class RedshiftCluster(RedshiftBase):
             cluster_subnet_group_name=redshift_cluster_subnet_group.ref,
             vpc_security_group_ids=[self.security_group.security_group_id],
             publicly_accessible=True,
+            encrypted=encryption_key is not None,
+            kms_key_id=encryption_key.key_id
         )
         self.cluster.apply_removal_policy(cdk.RemovalPolicy.DESTROY)
         self.cluster.add_depends_on(self.cluster_secret.node.default_child)
@@ -225,6 +229,7 @@ class RedshiftServerless(RedshiftBase):
             vpc: aws_ec2.Vpc = None,
             db_name: str,
             master_username: str,
+            encryption_key: kms.IKey = None,
             aws_region: str,
             admin_password: str = None,
             base_capacity: int = 32,
@@ -242,6 +247,7 @@ class RedshiftServerless(RedshiftBase):
             admin_user_password=master_password_secret.to_string(),
             db_name=db_name,
             iam_roles=[self.redshift_role.role_arn],
+            kms_key_id=None if encryption_key is None else encryption_key.key_id
         )
         self.redshift_namespace.add_depends_on(self.cluster_secret.node.default_child)
 
