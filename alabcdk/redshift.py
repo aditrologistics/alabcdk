@@ -197,7 +197,7 @@ class RedshiftCluster(RedshiftBase):
             vpc_security_group_ids=[self.security_group.security_group_id],
             publicly_accessible=True,
             encrypted=encryption_key is not None,
-            kms_key_id=encryption_key.key_id
+            kms_key_id=encryption_key.key_arn
         )
         self.cluster.apply_removal_policy(cdk.RemovalPolicy.DESTROY)
         self.cluster.add_depends_on(self.cluster_secret.node.default_child)
@@ -247,7 +247,7 @@ class RedshiftServerless(RedshiftBase):
             admin_user_password=master_password_secret.to_string(),
             db_name=db_name,
             iam_roles=[self.redshift_role.role_arn],
-            kms_key_id=None if encryption_key is None else encryption_key.key_id
+            kms_key_id=None if encryption_key is None else encryption_key.key_arn
         )
         self.redshift_namespace.add_depends_on(self.cluster_secret.node.default_child)
 
