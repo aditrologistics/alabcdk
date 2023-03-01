@@ -200,7 +200,6 @@ class RedshiftCluster(RedshiftBase):
             kms_key_id=encryption_key.key_arn
         )
         self.cluster.apply_removal_policy(cdk.RemovalPolicy.DESTROY)
-        self.cluster.add_depends_on(self.cluster_secret.node.default_child)
 
 
 class RedshiftServerless(RedshiftBase):
@@ -247,7 +246,6 @@ class RedshiftServerless(RedshiftBase):
             iam_roles=[self.redshift_role.role_arn],
             kms_key_id=None if encryption_key is None else encryption_key.key_arn
         )
-        self.redshift_namespace.add_depends_on(self.cluster_secret.node.default_child)
 
         isolated_subnets = [subnet.subnet_id for subnet in self.vpc.isolated_subnets]
 
