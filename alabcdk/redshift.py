@@ -46,47 +46,47 @@ class RedshiftBase(Construct):
 
         self.security_group = self.define_security_group()
 
-        secret_name = "DataLakeClusterAdminPasswordSecret"
-        self.cluster_secret = self.define_secret(name=secret_name,
-                                                 username=master_username,
-                                                 password=admin_password)
-        self.password_secret_name = secret_name
-        self.password_secret_key = "password"
-        generate_output(self, "password_secret_name", self.password_secret_name)
-        generate_output(self, "password_secret_key", self.password_secret_key)
+        # secret_name = "DataLakeClusterAdminPasswordSecret"
+        # self.cluster_secret = self.define_secret(name=secret_name,
+        #                                          username=master_username,
+        #                                          password=admin_password)
+        # self.password_secret_name = secret_name
+        # self.password_secret_key = "password"
+        # generate_output(self, "password_secret_name", self.password_secret_name)
+        # generate_output(self, "password_secret_key", self.password_secret_key)
 
 
-    def define_secret(self, *,
-                      name: str,
-                      host: str = "no-host",
-                      username: str,
-                      password: str = None) -> aws_secretsmanager.Secret:
-        secret_structure = {
-            "engine": "redshift",
-            "host": host,
-            "username": username,
-        }
-        gen_secret = aws_secretsmanager.SecretStringGenerator(secret_string_template=json.dumps(secret_structure),
-                                                              generate_string_key="password",
-                                                              exclude_punctuation=True,
-                                                              password_length=32)
-        set_secret = {
-            "engine": SecretValue.unsafe_plain_text("redshift"),
-            "host": SecretValue.unsafe_plain_text(host),
-            "username": SecretValue.unsafe_plain_text(username),
-        }
-        if password is not None:
-            set_secret["password"] = SecretValue.unsafe_plain_text(password)
+    # def define_secret(self, *,
+    #                   name: str,
+    #                   host: str = "no-host",
+    #                   username: str,
+    #                   password: str = None) -> aws_secretsmanager.Secret:
+    #     secret_structure = {
+    #         "engine": "redshift",
+    #         "host": host,
+    #         "username": username,
+    #     }
+    #     gen_secret = aws_secretsmanager.SecretStringGenerator(secret_string_template=json.dumps(secret_structure),
+    #                                                           generate_string_key="password",
+    #                                                           exclude_punctuation=True,
+    #                                                           password_length=32)
+    #     set_secret = {
+    #         "engine": SecretValue.unsafe_plain_text("redshift"),
+    #         "host": SecretValue.unsafe_plain_text(host),
+    #         "username": SecretValue.unsafe_plain_text(username),
+    #     }
+    #     if password is not None:
+    #         set_secret["password"] = SecretValue.unsafe_plain_text(password)
 
-        cluster_secret = aws_secretsmanager.Secret(
-            self,
-            gen_name(self, name),
-            description=f"Redshift Cluster secret",
-            removal_policy=cdk.RemovalPolicy.DESTROY,
-            secret_name=name,
-            generate_secret_string=gen_secret if password is None else None,
-            secret_object_value=set_secret if password is not None else None)
-        return cluster_secret
+    #     cluster_secret = aws_secretsmanager.Secret(
+    #         self,
+    #         gen_name(self, name),
+    #         description=f"Redshift Cluster secret",
+    #         removal_policy=cdk.RemovalPolicy.DESTROY,
+    #         secret_name=name,
+    #         generate_secret_string=gen_secret if password is None else None,
+    #         secret_object_value=set_secret if password is not None else None)
+    #     return cluster_secret
 
 
     def _define_vpc(self, vpc: aws_ec2.Vpc = None):
@@ -237,14 +237,12 @@ class RedshiftServerless(RedshiftBase):
             **kwargs):
         super().__init__(scope, id, vpc=vpc, master_username=master_username, admin_password=admin_password, **kwargs)
 
-        master_password_secret = SecretValue.secrets_manager(self.password_secret_name,
-                                                             json_field=self.password_secret_key)
         self.redshift_namespace = aws_redshiftserverless.CfnNamespace(
             self,
             gen_name(self, "DataLakeRedshiftServerlessNamespace"),
             namespace_name="data-lake-namespace",
             admin_username=master_username,
-            admin_user_password=master_password_secret.to_string(),
+            admin_user_password=admin_password,
             db_name=db_name,
             iam_roles=[self.redshift_role.role_arn],
             kms_key_id=None if encryption_key is None else encryption_key.key_arn
