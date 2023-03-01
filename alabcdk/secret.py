@@ -4,6 +4,7 @@ from constructs import Construct
 from aws_cdk import (
   RemovalPolicy,
   SecretValue,
+  aws_kms as kms,
   aws_secretsmanager as sm
 )
 
@@ -11,6 +12,7 @@ from aws_cdk import (
 def define_db_secret(scope: Construct, *,
                      name: str,
                      description: str,
+                     encryption_key: kms.IKey = None,
                      host: str = "no-host",
                      db_engine: str,
                      username: str,
@@ -38,6 +40,7 @@ def define_db_secret(scope: Construct, *,
       description=description,
       removal_policy=RemovalPolicy.DESTROY,
       secret_name=name,
+      encryption_key=encryption_key,
       generate_secret_string=gen_secret if password is None else None,
       secret_object_value=set_secret if password is not None else None)
   return secret
