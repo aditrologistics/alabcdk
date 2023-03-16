@@ -24,7 +24,7 @@ from .sns import Topic  # noqa401
 from .cloudfront import Website  # noqa401
 from .stack import AlabStack  # noqa401
 from .ssm import StringParameter  # noqa401
-from .redshift import RedshiftServerless, RedshiftCluster # noqa401
+from .redshift import RedshiftServerless, RedshiftCluster, Redshift # noqa401
 from .billing import BillingAlert # noqa401
 from .backup import BackupPlan # noqa401
 from .data_ingestion_api import ApiDomain, DataIngestionApi # noqa401
