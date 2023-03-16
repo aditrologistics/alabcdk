@@ -10,9 +10,10 @@ from aws_cdk import (
     aws_iam,
     aws_kms as kms,
     aws_redshift,
-    aws_redshiftserverless
+    aws_redshiftserverless,
+    aws_redshift_alpha as redshift
 )
-from typing import List
+from typing import List, Literal
 
 from .utils import (gen_name, generate_output)
 from .aws_cloud_resources import (redshift_port_number)
@@ -129,6 +130,50 @@ class RedshiftBase(Construct):
         return result
 
 
+class Redshift(RedshiftBase):
+    def __init__(
+            self,
+            scope: Construct,
+            id: str,
+            *,
+            db_name: str,
+            encryption_key: kms.IKey = None,
+            master_username: str,
+            admin_password: str = None,
+            vpc: aws_ec2.IVpc,
+            cluster_type: Literal["single-node", "multi-node"] = "multi-node",
+            number_of_nodes: int = 2,
+            **kwargs
+    ):
+        super().__init__(scope, id, vpc=vpc, master_username=master_username, admin_password=admin_password, **kwargs)
+
+        master_password = None if admin_password is None else SecretValue.unsafe_plain_text(admin_password)
+        type_of_cluster = redshift.ClusterType.SINGLE_NODE if cluster_type == "single-node" else redshift.ClusterType.MULTI_NODE
+        self.cluster = redshift.Cluster(
+            self,
+            gen_name(self, "DatalakeRedshift"),
+            master_user={ "master_username": master_username, 
+                         "master_password": master_password,
+                         "encryption_key": encryption_key
+                        },
+            vpc=vpc,
+            vpc_subnets=aws_ec2.SubnetSelection(subnets=vpc.isolated_subnets),
+            cluster_type=type_of_cluster,
+            default_database_name=db_name,
+            default_role=self.redshift_role,
+            encrypted=True,
+            encryption_key=encryption_key,
+            node_type=redshift.NodeType.DC2_LARGE,
+            number_of_nodes=None if cluster_type == "single-node" else number_of_nodes,
+            security_groups=[self.security_group]
+        )
+        self.cluster.apply_removal_policy(cdk.RemovalPolicy.DESTROY)
+        encryption_key.grant_encrypt_decrypt(self.redshift_role)
+
+        if admin_password is None:
+            self.cluster.add_rotation_single_user()
+
+
 class RedshiftCluster(RedshiftBase):
     def define_vpc(self):
         return aws_ec2.Vpc(
@@ -162,6 +207,8 @@ class RedshiftCluster(RedshiftBase):
             *,
             vpc: aws_ec2.Vpc = None,
             ec2_instance_type: str,
+            cluster_type: str,
+            number_of_nodes: int,
             db_name: str,
             master_username: str,
             admin_password: str = None,
@@ -186,8 +233,8 @@ class RedshiftCluster(RedshiftBase):
         self.cluster = aws_redshift.CfnCluster(
             self,
             gen_name(self, "DataLakeRedshiftCluster"),
-            cluster_type="single-node",
-            # number_of_nodes=1,
+            cluster_type=cluster_type,
+            number_of_nodes=number_of_nodes,
             db_name=db_name,
             master_username=master_username,
             master_user_password=master_password_secret.to_string(),
