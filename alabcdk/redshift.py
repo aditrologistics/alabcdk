@@ -11,6 +11,7 @@ from aws_cdk import (
     aws_kms as kms,
     aws_redshift,
     aws_redshiftserverless,
+    aws_redshift,
     aws_redshift_alpha as redshift
 )
 from typing import List, Literal
@@ -169,6 +170,10 @@ class Redshift(RedshiftBase):
         )
         self.cluster.apply_removal_policy(cdk.RemovalPolicy.DESTROY)
         encryption_key.grant_encrypt_decrypt(self.redshift_role)
+
+        # Workaround that CDK does not set the proper KMS key ARN
+        cluster_resource: aws_redshift.CfnCluster = self.cluster.node.default_child
+        cluster_resource.kms_key_id = encryption_key.key_arn
 
         if admin_password is None:
             self.cluster.add_rotation_single_user()
