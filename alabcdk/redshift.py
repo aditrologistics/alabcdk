@@ -161,6 +161,7 @@ class Redshift(RedshiftBase):
             cluster_type=type_of_cluster,
             default_database_name=db_name,
             default_role=self.redshift_role,
+            roles=[self.redshift_role],
             encrypted=True,
             encryption_key=encryption_key,
             node_type=redshift.NodeType.DC2_LARGE,
