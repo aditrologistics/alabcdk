@@ -105,10 +105,9 @@ class RedshiftBase(Construct):
         # Create Security Group for Redshift
         result = aws_ec2.SecurityGroup(
             self,
-            id=gen_name(self, "SecurityGroup"),
+            gen_name(self, "redshift-sg"),
             vpc=self.vpc,
-            security_group_name=f"redshift_sec_grp_{self.vpc.vpc_id}",
-            description="Security Group for Redshift",
+            description=f"Security Group for Redshift in stack {cdk.Stack.of(self).stack_name}",
         )
         result.apply_removal_policy(cdk.RemovalPolicy.DESTROY)
 
