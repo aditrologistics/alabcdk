@@ -127,7 +127,7 @@ class RedshiftBase(Construct):
         result.add_ingress_rule(
             peer=result,
             connection=aws_ec2.Port.tcp(redshift_port_number),
-            description="Allow Lambda functions access to the redshift serverless (deprecated)",
+            description="Allow Lambda functions access to the redshift serverless",
         )
 
         for peer_sg in ingress_peers_sg:
