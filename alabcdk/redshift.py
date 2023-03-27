@@ -46,7 +46,8 @@ class RedshiftBase(Construct):
         self.redshift_role.apply_removal_policy(cdk.RemovalPolicy.DESTROY)
         self.vpc = self._define_vpc(vpc)
 
-        self.security_group = self.define_security_group()
+        self.client_group = self.define_redshift_client_group()
+        self.security_group = self.define_security_group(ingress_peers_sg=[self.client_group])
 
         # secret_name = "DataLakeClusterAdminPasswordSecret"
         # self.cluster_secret = self.define_secret(name=secret_name,
@@ -101,8 +102,17 @@ class RedshiftBase(Construct):
 
     def define_vpc(self):
         raise NotImplementedError()
+    
+    def define_redshift_client_group(self) -> aws_ec2.SecurityGroup:
+        # Create security group for clients to be member of
+        return aws_ec2.SecurityGroup(
+            self,
+            gen_name(self, "redshift-client-sg"),
+            vpc=self.vpc,
+            description=f"Membership security group for Redshift clients"
+        )
 
-    def define_security_group(self, ingress_peers: List[str] = []) -> aws_ec2.SecurityGroup:
+    def define_security_group(self, *, ingress_peers_sg: List[aws_ec2.ISecurityGroup] = [], ingress_peers_ipv4: List[str] = []) -> aws_ec2.SecurityGroup:
         # Create Security Group for Redshift
         result = aws_ec2.SecurityGroup(
             self,
@@ -117,16 +127,21 @@ class RedshiftBase(Construct):
         result.add_ingress_rule(
             peer=result,
             connection=aws_ec2.Port.tcp(redshift_port_number),
-            description="Allow Lambda functions access to the redshift serverless",
+            description="Allow Lambda functions access to the redshift serverless (deprecated)",
         )
 
-        for peer in ingress_peers:
+        for peer_sg in ingress_peers_sg:
             result.add_ingress_rule(
-                peer=aws_ec2.Peer.ipv4(peer),
+                peer=aws_ec2.Peer.security_group_id(peer_sg.security_group_id),
                 connection=aws_ec2.Port.tcp(redshift_port_number),
-                description=f"Allow connections to the redshift cluster from '{peer}'",
+                description=f"Allow connections to the redshift cluster from '{peer_sg.security_group_id}'",
             )
-
+        for peer_ip in ingress_peers_ipv4:
+            result.add_ingress_rule(
+                peer=aws_ec2.Peer.ipv4(peer_ip),
+                connection=aws_ec2.Port.tcp(redshift_port_number),
+                description=f"Allow connections to the redshift cluster from '{peer_ip}'",
+            )
         return result
 
 
