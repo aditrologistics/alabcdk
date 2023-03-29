@@ -143,7 +143,7 @@ class RedshiftBase(Construct):
             result.add_ingress_rule(
                 peer=aws_ec2.Peer.ipv4(peer_ip),
                 connection=aws_ec2.Port.tcp(redshift_port_number),
-                description=f"Allow connections to the redshift cluster from '{peer_ip}'",
+                description=f"Allow connections to the redshift cluster from client IP range",
             )
         return result
 
