@@ -29,6 +29,7 @@ class RedshiftBase(Construct):
             vpc: aws_ec2.Vpc = None,
             master_username: str,
             admin_password: str = None,
+            client_security_groups: List[aws_ec2.ISecurityGroup] = [],
             **kwargs) -> None:
         super().__init__(scope, id, **kwargs)
 
@@ -46,8 +47,8 @@ class RedshiftBase(Construct):
         self.redshift_role.apply_removal_policy(cdk.RemovalPolicy.DESTROY)
         self.vpc = self._define_vpc(vpc)
 
-        self.client_group = self.define_redshift_client_group()
-        self.security_group = self.define_security_group(ingress_peers_sg=[self.client_group])
+        self.client_group = self.define_default_redshift_client_group()
+        self.security_group = self.define_security_group(ingress_peers_sg=([self.client_group] + client_security_groups))
 
         # secret_name = "DataLakeClusterAdminPasswordSecret"
         # self.cluster_secret = self.define_secret(name=secret_name,
@@ -103,7 +104,7 @@ class RedshiftBase(Construct):
     def define_vpc(self):
         raise NotImplementedError()
     
-    def define_redshift_client_group(self) -> aws_ec2.SecurityGroup:
+    def define_default_redshift_client_group(self) -> aws_ec2.SecurityGroup:
         # Create security group for clients to be member of
         return aws_ec2.SecurityGroup(
             self,
@@ -156,11 +157,17 @@ class Redshift(RedshiftBase):
             master_username: str,
             admin_password: str = None,
             vpc: aws_ec2.IVpc,
+            client_security_groups: List[aws_ec2.ISecurityGroup] = [],
             cluster_type: Literal["single-node", "multi-node"] = "multi-node",
             number_of_nodes: int = 2,
             **kwargs
     ):
-        super().__init__(scope, id, vpc=vpc, master_username=master_username, admin_password=admin_password, **kwargs)
+        super().__init__(scope, id, 
+                         vpc=vpc, 
+                         master_username=master_username, 
+                         admin_password=admin_password, 
+                         client_security_groups=client_security_groups, 
+                         **kwargs)
 
         master_password = None if admin_password is None else SecretValue.unsafe_plain_text(admin_password)
         type_of_cluster = redshift.ClusterType.SINGLE_NODE if cluster_type == "single-node" else redshift.ClusterType.MULTI_NODE
