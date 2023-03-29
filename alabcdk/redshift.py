@@ -30,6 +30,7 @@ class RedshiftBase(Construct):
             master_username: str,
             admin_password: str = None,
             client_security_groups: List[aws_ec2.ISecurityGroup] = [],
+            client_ip_ranges: List[str] = [],
             **kwargs) -> None:
         super().__init__(scope, id, **kwargs)
 
@@ -48,7 +49,8 @@ class RedshiftBase(Construct):
         self.vpc = self._define_vpc(vpc)
 
         self.client_group = self.define_default_redshift_client_group()
-        self.security_group = self.define_security_group(ingress_peers_sg=([self.client_group] + client_security_groups))
+        self.security_group = self.define_security_group(ingress_peers_sg=([self.client_group] + client_security_groups),
+                                                         ingress_peers_ipv4=client_ip_ranges)
 
         # secret_name = "DataLakeClusterAdminPasswordSecret"
         # self.cluster_secret = self.define_secret(name=secret_name,
@@ -158,6 +160,7 @@ class Redshift(RedshiftBase):
             admin_password: str = None,
             vpc: aws_ec2.IVpc,
             client_security_groups: List[aws_ec2.ISecurityGroup] = [],
+            client_ip_ranges: List[str] = [],
             cluster_type: Literal["single-node", "multi-node"] = "multi-node",
             number_of_nodes: int = 2,
             **kwargs
@@ -166,7 +169,8 @@ class Redshift(RedshiftBase):
                          vpc=vpc, 
                          master_username=master_username, 
                          admin_password=admin_password, 
-                         client_security_groups=client_security_groups, 
+                         client_security_groups=client_security_groups,
+                         client_ip_ranges=client_ip_ranges,
                          **kwargs)
 
         master_password = None if admin_password is None else SecretValue.unsafe_plain_text(admin_password)
