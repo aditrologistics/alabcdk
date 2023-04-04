@@ -35,14 +35,17 @@ class RedshiftBase(Construct):
         super().__init__(scope, id, **kwargs)
 
         # Redshift IAM Role
+        principals = aws_iam.CompositePrincipal(aws_iam.ServicePrincipal("redshift.amazonaws.com"),
+                                                aws_iam.ServicePrincipal("sqlworkbench.amazonaws.com"))
         self.redshift_role = aws_iam.Role(
             self,
             gen_name(self, "DataLakeRedshiftClusterRole"),
-            assumed_by=aws_iam.ServicePrincipal("redshift.amazonaws.com"),
+            assumed_by=principals,
             managed_policies=[
                 aws_iam.ManagedPolicy.from_aws_managed_policy_name("AmazonS3ReadOnlyAccess"),
                 aws_iam.ManagedPolicy.from_aws_managed_policy_name("AWSGlueConsoleFullAccess"),
                 aws_iam.ManagedPolicy.from_aws_managed_policy_name("AmazonAthenaFullAccess"),
+                aws_iam.ManagedPolicy.from_aws_managed_policy_name("AmazonRedshiftQueryEditorV2FullAccess")
             ],
         )
         self.redshift_role.apply_removal_policy(cdk.RemovalPolicy.DESTROY)
