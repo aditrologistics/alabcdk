@@ -33,6 +33,7 @@ class BackupPlan(backup.BackupPlan):
             *,
             backup_resource_arn: str = None,
             backup_resource_arns: list[str] = None,
+            backup_resource_constructs: list[Construct] = None,
             completion_window_hours: int = 8,
             start_window_hours: int = 4,
             vault: backup.BackupVault = None,
@@ -70,7 +71,7 @@ class BackupPlan(backup.BackupPlan):
                 enable_continuous_backup=True,
                 delete_after=Duration.days(PITR_retention_period_days)))
 
-        if backup_resource_arn is None and backup_resource_arns is None:
+        if backup_resource_arn is None and backup_resource_arns is None and backup_resource_constructs is None:
             raise ValueError("One need to specify a backup resource!")
         if backup_resource_arns is not None:
             resource_list = [backup.BackupResource.from_arn(arn) for arn in backup_resource_arns]
@@ -78,27 +79,45 @@ class BackupPlan(backup.BackupPlan):
             resource_list = []
         if backup_resource_arn is not None:
             resource_list.append(backup.BackupResource.from_arn(backup_resource_arn))
+        if backup_resource_constructs is not None:
+            resource_list.extend([backup.BackupResource.from_construct(construct) for construct in backup_resource_constructs])
+
 
         # Create a role to attach to the selections resources
-        # The CDK will add additional service policies to this role under the hood,
-        # but we need to add the S3 ones explicitly to make it work for S3 backup
         self.role = iam.Role(
             self,
             f"{id}-aws-backup-role",
-            assumed_by=iam.ServicePrincipal("backup.amazonaws.com"),
-            managed_policies=[
+            assumed_by=iam.ServicePrincipal("backup.amazonaws.com")
+        )
+
+        # The CDK will add additional service policies to this role under the hood,
+        # but we need to add the S3 ones explicitly to make it work for S3 backup
+        add_s3_policy = False
+        if backup_resource_arns is not None and backup_resource_arn is not None:
+            if any("aws:s3" in s for s in backup_resource_arns) or "aws:s3" in backup_resource_arn:
+                add_s3_policy = True
+        if backup_resource_arns is not None and backup_resource_arn is None:
+            if any("aws:s3" in s for s in backup_resource_arns):
+                add_s3_policy = True
+        if backup_resource_arns is None and backup_resource_arn is not None:
+            if "aws:s3" in backup_resource_arn:
+                add_s3_policy = True
+
+        if add_s3_policy:
+            self.role.add_managed_policy(
                 iam.ManagedPolicy.from_managed_policy_arn(
                     self,
                     f"s3-backup-{id}",
                     managed_policy_arn="arn:aws:iam::aws:policy/AWSBackupServiceRolePolicyForS3Backup",
-                ),
+                )
+            )
+            self.role.add_managed_policy(
                 iam.ManagedPolicy.from_managed_policy_arn(
                     self,
                     f"s3-restore-{id}",
                     managed_policy_arn="arn:aws:iam::aws:policy/AWSBackupServiceRolePolicyForS3Restore",
                 )
-            ]
-        )
+            )
 
         for i, br in enumerate(resource_list, 1):
             self.add_selection(
