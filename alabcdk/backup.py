@@ -38,6 +38,7 @@ class BackupPlan(backup.BackupPlan):
             start_window_hours: int = 4,
             vault: backup.BackupVault = None,
             PITR_retention_period_days: int = None,
+            add_s3_policy: bool = False,
             **kwargs) -> None:
         if vault is None:
             vault = backup.BackupVault(
@@ -92,17 +93,6 @@ class BackupPlan(backup.BackupPlan):
 
         # The CDK will add additional service policies to this role under the hood,
         # but we need to add the S3 ones explicitly to make it work for S3 backup
-        add_s3_policy = False
-        if backup_resource_arns is not None and backup_resource_arn is not None:
-            if any("aws:s3" in s for s in backup_resource_arns) or "aws:s3" in backup_resource_arn:
-                add_s3_policy = True
-        if backup_resource_arns is not None and backup_resource_arn is None:
-            if any("aws:s3" in s for s in backup_resource_arns):
-                add_s3_policy = True
-        if backup_resource_arns is None and backup_resource_arn is not None:
-            if "aws:s3" in backup_resource_arn:
-                add_s3_policy = True
-
         if add_s3_policy:
             self.role.add_managed_policy(
                 iam.ManagedPolicy.from_managed_policy_arn(
