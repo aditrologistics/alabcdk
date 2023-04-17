@@ -81,7 +81,8 @@ class BackupPlan(backup.BackupPlan):
         if backup_resource_arn is not None:
             resource_list.append(backup.BackupResource.from_arn(backup_resource_arn))
         if backup_resource_constructs is not None:
-            resource_list.extend([backup.BackupResource.from_construct(construct) for construct in backup_resource_constructs])
+            for construct in backup_resource_constructs:
+                resource_list.append(backup.BackupResource.from_construct(construct))
 
 
         # Create a role to attach to the selections resources
