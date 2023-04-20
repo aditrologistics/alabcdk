@@ -1,0 +1,17 @@
+[tool.pdm]
+
+[project]
+name = "alabcdk"
+version = "1.10.3"
+description = "Useful CDK constructs"
+authors = [
+    {name = "Jesper Högström", email = "---"},
+]
+dependencies = ["constructs<11.0.0,>=10.0.0", "aws-cdk-lib==2.66.0", "importlib-metadata", "importlib-resources", "zipp", "boto3", "aws-cdk-aws-apigatewayv2-alpha", "aws-cdk-aws-apigatewayv2-authorizers-alpha", "aws-cdk-aws-apigatewayv2-integrations-alpha", "aws-cdk-aws-redshift-alpha"]
+requires-python = ">=3.8"
+readme = "README.md"
+license = {text = "---"}
+
+[build-system]
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
