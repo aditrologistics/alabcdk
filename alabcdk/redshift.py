@@ -204,9 +204,6 @@ class Redshift(RedshiftBase):
         cluster_resource: aws_redshift.CfnCluster = self.cluster.node.default_child
         cluster_resource.kms_key_id = encryption_key.key_arn
 
-        if admin_password is None:
-            self.cluster.add_rotation_single_user()
-
 
 class RedshiftCluster(RedshiftBase):
     def define_vpc(self):
