@@ -1,4 +1,3 @@
-
 from typing import Sequence
 from constructs import Construct
 from aws_cdk import (
@@ -12,10 +11,11 @@ from aws_cdk import (
     aws_events_targets,
     aws_cloudfront,
     aws_cloudfront_origins,
-    aws_certificatemanager)
+    aws_certificatemanager,
+)
 
-from .utils import (gen_name, get_params, filter_kwargs, generate_output)
-from .network import (fetch_vpc, get_private_subnet_ids) # noqa401
+from .utils import gen_name, get_params, filter_kwargs, generate_output
+from .network import fetch_vpc, get_private_subnet_ids  # noqa401
 from .lambdas import Function, PipLayers  # noqa401
 from .dynamodb import Table  # noqa401
 from .sqs import Queue  # noqa401
@@ -24,19 +24,17 @@ from .sns import Topic  # noqa401
 from .cloudfront import Website  # noqa401
 from .stack import AlabStack  # noqa401
 from .ssm import StringParameter  # noqa401
-from .redshift import RedshiftServerless, RedshiftCluster, Redshift # noqa401
-from .billing import BillingAlert # noqa401
-from .backup import BackupPlan # noqa401
-from .data_ingestion_api import ApiDomain, DataIngestionApi # noqa401
-from .secret import define_db_secret # noqa401
+from .redshift import RedshiftServerless, RedshiftCluster, Redshift  # noqa401
+from .billing import BillingAlert  # noqa401
+from .backup import BackupPlan  # noqa401
+from .data_ingestion_api import ApiDomain, DataIngestionApi  # noqa401
+from .secret import define_db_secret  # noqa401
+
 
 class Rule(aws_events.Rule):
     def __init__(
-            self,
-            scope: Construct,
-            id: str,
-            target: aws_lambda.Function = None,
-            **kwargs):
+        self, scope: Construct, id: str, target: aws_lambda.Function = None, **kwargs
+    ):
         kwargs = get_params(locals())
         if all([target, kwargs.get("targets")]):
             raise Exception("You may only specify one of 'target' and 'targets")
@@ -48,23 +46,23 @@ class Rule(aws_events.Rule):
 
 
 class RestApi(aws_apigateway.RestApi):
-    def __init__(
-            self,
-            scope: Construct,
-            id: str,
-            **kwargs):
+    def __init__(self, scope: Construct, id: str, **kwargs):
         """
         Creates a RestApi with some sensible defaults.
 
         defaults:
         - rest_api_name -> gen_name(scope, id) if not set
         """
-        kwargs.setdefault('rest_api_name', gen_name(scope, id))
+        kwargs.setdefault("rest_api_name", gen_name(scope, id))
 
         # Set default deploy options
-        kwargs.setdefault('deploy_options', aws_apigateway.StageOptions(
-            logging_level=aws_apigateway.MethodLoggingLevel.INFO,
-            metrics_enabled=True))
+        kwargs.setdefault(
+            "deploy_options",
+            aws_apigateway.StageOptions(
+                logging_level=aws_apigateway.MethodLoggingLevel.INFO,
+                metrics_enabled=True,
+            ),
+        )
 
         super().__init__(scope, id, **kwargs)
 
@@ -72,24 +70,29 @@ class RestApi(aws_apigateway.RestApi):
 
 
 class ResourceWithLambda(Construct):
-    '''
+    """
     Construct that wraps the creation of a lambda function,
     optionally a resource and adds a method to the resource
     integrated with the lambda.
-    '''
+    """
+
     def __init__(
-            self,
-            scope: Construct,
-            id: str, *,
-            parent_resource: aws_apigateway.IResource,
-            code: aws_lambda.Code = None,
-            description: str = None,
-            verb: str = "ANY",
-            resource_name: str = None,
-            integration_request_templates: dict = {"application/json": '{ "statusCode": "200" }'},
-            resource_add_child: bool = True,
-            **kwargs):
-        '''
+        self,
+        scope: Construct,
+        id: str,
+        *,
+        parent_resource: aws_apigateway.IResource,
+        code: aws_lambda.Code = None,
+        description: str = None,
+        verb: str = "ANY",
+        resource_name: str = None,
+        integration_request_templates: dict = {
+            "application/json": '{ "statusCode": "200" }'
+        },
+        resource_add_child: bool = True,
+        **kwargs,
+    ):
+        """
         Create a lambda function and hook it up to a resource
         with a lambda integration.
 
@@ -109,12 +112,14 @@ class ResourceWithLambda(Construct):
         method_ -> will be sent to add_method()
 
         integration_ -> will be sent to the integration constructor
-        '''
+        """
         super().__init__(scope, f"{id}_ResourceWithLambda")
         kwargs = get_params(locals())
 
         if resource_name and not resource_add_child:
-            self.node.add_error(f"{type(self).__name__}('{id}'): Cannot specify both resource_add_child=True and set a resource_name ('{resource_name}').")  # noqa e501
+            self.node.add_error(
+                f"{type(self).__name__}('{id}'): Cannot specify both resource_add_child=True and set a resource_name ('{resource_name}')."
+            )  # noqa e501
 
         if not resource_name:
             resource_name = id
@@ -126,18 +131,15 @@ class ResourceWithLambda(Construct):
         lambda_kwargs.setdefault("function_name", gen_name(scope, f"{id}"))
         lambda_kwargs.setdefault("handler", f"{id}.main")
         if code:
-            lambda_kwargs['code'] = code
+            lambda_kwargs["code"] = code
 
         # TODO: Wrap this in a canarydeploy. That may be a breaking change unfortunately.
-        handler = Function(
-            scope,
-            f"{id}",
-            description=description,
-            **lambda_kwargs
-        )
+        handler = Function(scope, f"{id}", description=description, **lambda_kwargs)
         self.handler = handler
 
-        self.integration = aws_apigateway.LambdaIntegration(self.handler, **integration_kwargs)
+        self.integration = aws_apigateway.LambdaIntegration(
+            self.handler, **integration_kwargs
+        )
 
         if resource_add_child:
             self.resource = parent_resource.add_resource(resource_name)
@@ -148,23 +150,25 @@ class ResourceWithLambda(Construct):
             self,
             f"{id}_url",
             value=f"{id}:: {self.resource.url} -- {verb}",
-            description=f"url for {id}")
+            description=f"url for {id}",
+        )
 
 
 class WebsiteXX(Construct):
     def __init__(
-            self,
-            scope: Construct,
-            id: str,
-            *,
-            index_document: str = None,
-            error_document: str = None,
-            cors_rules: Sequence[aws_s3.CorsRule] = None,
-            domain_names: Sequence[str] = None,
-            certificate: aws_certificatemanager.Certificate = None,
-            certificate_arn: str = None,
-            backend: aws_apigateway.IRestApi = None,
-            **kwargs) -> None:
+        self,
+        scope: Construct,
+        id: str,
+        *,
+        index_document: str = None,
+        error_document: str = None,
+        cors_rules: Sequence[aws_s3.CorsRule] = None,
+        domain_names: Sequence[str] = None,
+        certificate: aws_certificatemanager.Certificate = None,
+        certificate_arn: str = None,
+        backend: aws_apigateway.IRestApi = None,
+        **kwargs,
+    ) -> None:
         """Create a bucket and a CDN in front of it. The CDN will be connected to a
         certificate and domain_names if provided. Passing a backend will also add
         the backend behind /api
@@ -188,17 +192,22 @@ class WebsiteXX(Construct):
         super().__init__(scope, f"{id}_website")
 
         if all([certificate, certificate_arn]):
-            raise ValueError("You cannot pass values for both 'certificate' and 'certificate_arn'.")
+            raise ValueError(
+                "You cannot pass values for both 'certificate' and 'certificate_arn'."
+            )
         kwargs = get_params(locals())
         bucket_kwargs = filter_kwargs(kwargs, "bucket_")
         cdn_kwargs = filter_kwargs(kwargs, "cdn_")
 
         index_document = index_document or "index.html"
         error_document = error_document or "index.html"
-        cors_rules = cors_rules or [aws_s3.CorsRule(
+        cors_rules = cors_rules or [
+            aws_s3.CorsRule(
                 allowed_methods=[aws_s3.HttpMethods.GET],
                 allowed_headers=["*"],
-                allowed_origins=["*"])]
+                allowed_origins=["*"],
+            )
+        ]
 
         routing_rules = []
         error_responses = []
@@ -208,13 +217,16 @@ class WebsiteXX(Construct):
                     condition=aws_s3.RoutingRuleCondition(
                         http_error_code_returned_equals=error_code,
                     ),
-                    replace_key=aws_s3.ReplaceKey.prefix_with("#!")
+                    replace_key=aws_s3.ReplaceKey.prefix_with("#!"),
                 )
             )
-            error_responses.append(aws_cloudfront.CfnDistribution.CustomErrorResponseProperty(
-                        error_code=int(error_code),
-                        response_page_path="/index.html",
-                        response_code=200))
+            error_responses.append(
+                aws_cloudfront.CfnDistribution.CustomErrorResponseProperty(
+                    error_code=int(error_code),
+                    response_page_path="/index.html",
+                    response_code=200,
+                )
+            )
 
         self.bucket = Bucket(
             self,
@@ -225,22 +237,24 @@ class WebsiteXX(Construct):
             public_read_access=True,
             website_routing_rules=routing_rules,
             cors=cors_rules,
-            **bucket_kwargs)
+            **bucket_kwargs,
+        )
         self.bucket.grant_public_access()
-        CfnOutput(self, "S3WebUrl", value=self.bucket.bucket_website_url, )
+        CfnOutput(
+            self,
+            "S3WebUrl",
+            value=self.bucket.bucket_website_url,
+        )
 
         if not certificate and certificate_arn:
             certificate = aws_certificatemanager.Certificate.from_certificate_arn(
-                self,
-                f"{id}_certificate",
-                certificate_arn
+                self, f"{id}_certificate", certificate_arn
             )
 
         self.distribution = aws_cloudfront.Distribution(
             self,
             f"{id}_distro",
             comment=f"CDN for {id}",
-
             default_behavior=aws_cloudfront.BehaviorOptions(
                 origin=aws_cloudfront_origins.S3Origin(self.bucket)
             ),
@@ -248,14 +262,14 @@ class WebsiteXX(Construct):
             domain_names=domain_names,
             certificate=certificate,
             default_root_object=index_document,
-            **cdn_kwargs
+            **cdn_kwargs,
         )
         if backend:
             self.distribution.add_behavior(
                 "/api/*",
                 origin=aws_cloudfront_origins.HttpOrigin(
                     f"{backend.rest_api_id}.execute-api.{Stack.of(self).region}.amazonaws.com",
-                    origin_path=f"/{backend.deployment_stage.stage_name}"
+                    origin_path=f"/{backend.deployment_stage.stage_name}",
                 ),
                 allowed_methods=aws_cloudfront.AllowedMethods.ALLOW_ALL,
                 cache_policy=aws_cloudfront.CachePolicy(
@@ -264,8 +278,10 @@ class WebsiteXX(Construct):
                     cookie_behavior=aws_cloudfront.CacheCookieBehavior.all(),
                     query_string_behavior=aws_cloudfront.CacheQueryStringBehavior.all(),
                     default_ttl=Duration.seconds(0),
-                    header_behavior=aws_cloudfront.CacheHeaderBehavior.allow_list("Authorization")
-                )
+                    header_behavior=aws_cloudfront.CacheHeaderBehavior.allow_list(
+                        "Authorization"
+                    ),
+                ),
             )
 
         CfnOutput(self, "CDNUrl", value=self.distribution.distribution_domain_name)

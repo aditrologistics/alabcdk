@@ -7,15 +7,15 @@ from typing import List
 
 
 class BillingAlert(Construct):
-
     def __init__(
-            self,
-            scope: Construct,
-            id: str,
-            *,
-            emails_list: List[str] = None,
-            threshold: int = None,
-            **kwargs) -> None:
+        self,
+        scope: Construct,
+        id: str,
+        *,
+        emails_list: List[str] = None,
+        threshold: int = None,
+        **kwargs,
+    ) -> None:
         super().__init__(scope, id, **kwargs)
         """
         Creates a billing alert which send notification to a set of emails if
@@ -26,22 +26,22 @@ class BillingAlert(Construct):
         threshold: Amount in USD to report when crossed
         """
         if emails_list is None or threshold is None:
-            raise ValueError("emails_list and threshold needs to be defined for billing alerts!")
+            raise ValueError(
+                "emails_list and threshold needs to be defined for billing alerts!"
+            )
 
         subscribers_list = []
         for emails in emails_list:
             subscribers_list.append(
                 aws_budgets.CfnBudget.SubscriberProperty(
-                    address=emails,
-                    subscription_type="EMAIL"
+                    address=emails, subscription_type="EMAIL"
                 )
             )
 
         prop = aws_budgets.CfnBudget.BudgetDataProperty(
             budget_type="COST",
             budget_limit=aws_budgets.CfnBudget.SpendProperty(
-                amount=threshold,
-                unit="USD"
+                amount=threshold, unit="USD"
             ),
             time_unit="MONTHLY",
         )
@@ -56,9 +56,9 @@ class BillingAlert(Construct):
                         comparison_operator="GREATER_THAN",
                         notification_type="ACTUAL",
                         threshold=100,
-                        threshold_type="PERCENTAGE"
+                        threshold_type="PERCENTAGE",
                     ),
-                    subscribers=subscribers_list
+                    subscribers=subscribers_list,
                 )
-            ]
+            ],
         )

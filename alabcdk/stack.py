@@ -1,7 +1,6 @@
-from .utils import (generate_output)
+from .utils import generate_output
 from constructs import Construct
-from aws_cdk import (
-    Stack)
+from aws_cdk import Stack
 import subprocess
 from typing import List
 
@@ -36,16 +35,17 @@ class AlabStack(Stack):
                 generate_output(self, f"git_remote_{i}", remote)
 
     def __init__(
-            self,
-            scope: Construct,
-            construct_id: str,
-            *,
-            stage: str = None,
-            user: str = None,
-            domain_name: str = None,
-            hosted_zone: str = None,
-            add_git_info: bool = True,
-            **kwargs) -> None:
+        self,
+        scope: Construct,
+        construct_id: str,
+        *,
+        stage: str = None,
+        user: str = None,
+        domain_name: str = None,
+        hosted_zone: str = None,
+        add_git_info: bool = True,
+        **kwargs,
+    ) -> None:
         super().__init__(scope, construct_id, **kwargs)
         self.stage = stage or "DEV"
         self.user = user or "None"

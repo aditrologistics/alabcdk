@@ -1,14 +1,9 @@
 from __future__ import annotations
 from constructs import Construct
-from aws_cdk import (
-    aws_backup as backup,
-    aws_events as events,
-    aws_iam as iam,
-    Duration
-)
+from aws_cdk import aws_backup as backup, aws_events as events, aws_iam as iam, Duration
 from .utils import gen_name
 
-'''
+"""
 Example how to use this module
 test_bucket = create_bucket()
 
@@ -21,30 +16,31 @@ backup = BackupPlan(
 # Add some other backup rule
 backup.add_backup_rule(cron_expression="15 14 * * ? *", retentation_period_days=34)
 
-'''
+"""
 
 
 class BackupPlan(backup.BackupPlan):
-
     def __init__(
-            self,
-            scope: Construct,
-            id: str,
-            *,
-            backup_resource_arn: str = None,
-            backup_resource_arns: list[str] = None,
-            backup_resource_constructs: list[Construct] = None,
-            completion_window_hours: int = 8,
-            start_window_hours: int = 4,
-            vault: backup.BackupVault = None,
-            PITR_retention_period_days: int = None,
-            add_s3_policy: bool = False,
-            **kwargs) -> None:
+        self,
+        scope: Construct,
+        id: str,
+        *,
+        backup_resource_arn: str = None,
+        backup_resource_arns: list[str] = None,
+        backup_resource_constructs: list[Construct] = None,
+        completion_window_hours: int = 8,
+        start_window_hours: int = 4,
+        vault: backup.BackupVault = None,
+        PITR_retention_period_days: int = None,
+        add_s3_policy: bool = False,
+        **kwargs,
+    ) -> None:
         if vault is None:
             vault = backup.BackupVault(
                 scope,
                 gen_name(scope, f"{id}-backup-vault"),
-                backup_vault_name=f"{id}-backup-vault")
+                backup_vault_name=f"{id}-backup-vault",
+            )
         super().__init__(scope, id, backup_vault=vault, **kwargs)
         """
         Creates a backup for a specified backup_resource for s3 bucket.
@@ -67,15 +63,24 @@ class BackupPlan(backup.BackupPlan):
         self.start_window = Duration.hours(start_window_hours)
 
         if PITR_retention_period_days is not None:
-            self.add_rule(backup.BackupPlanRule(
-                rule_name=f"{id}-PITR-rule",
-                enable_continuous_backup=True,
-                delete_after=Duration.days(PITR_retention_period_days)))
+            self.add_rule(
+                backup.BackupPlanRule(
+                    rule_name=f"{id}-PITR-rule",
+                    enable_continuous_backup=True,
+                    delete_after=Duration.days(PITR_retention_period_days),
+                )
+            )
 
-        if backup_resource_arn is None and backup_resource_arns is None and backup_resource_constructs is None:
+        if (
+            backup_resource_arn is None
+            and backup_resource_arns is None
+            and backup_resource_constructs is None
+        ):
             raise ValueError("One need to specify a backup resource!")
         if backup_resource_arns is not None:
-            resource_list = [backup.BackupResource.from_arn(arn) for arn in backup_resource_arns]
+            resource_list = [
+                backup.BackupResource.from_arn(arn) for arn in backup_resource_arns
+            ]
         else:
             resource_list = []
         if backup_resource_arn is not None:
@@ -84,12 +89,11 @@ class BackupPlan(backup.BackupPlan):
             for construct in backup_resource_constructs:
                 resource_list.append(backup.BackupResource.from_construct(construct))
 
-
         # Create a role to attach to the selections resources
         self.role = iam.Role(
             self,
             f"{id}-aws-backup-role",
-            assumed_by=iam.ServicePrincipal("backup.amazonaws.com")
+            assumed_by=iam.ServicePrincipal("backup.amazonaws.com"),
         )
 
         # The CDK will add additional service policies to this role under the hood,
@@ -115,18 +119,23 @@ class BackupPlan(backup.BackupPlan):
                 f"{id}-backup-resource-{i}",
                 resources=[br],
                 role=self.role,
-                allow_restores=True)
+                allow_restores=True,
+            )
 
-
-    def add_backup_rule(self, cron_expression: str, retentation_period_days: int) -> None:
-        '''
+    def add_backup_rule(
+        self, cron_expression: str, retentation_period_days: int
+    ) -> None:
+        """
         cron expression according to
         https://docs.aws.amazon.com/lambda/latest/dg/services-cloudwatchevents-expressions.html
         e.g. "37 13 * * ? *"
-        '''
+        """
         schedule = events.Schedule.expression(f"cron({cron_expression})")
-        self.add_rule(backup.BackupPlanRule(
-            schedule_expression=schedule,
-            completion_window=self.completion_window,
-            start_window=self.start_window,
-            delete_after=Duration.days(retentation_period_days)))
+        self.add_rule(
+            backup.BackupPlanRule(
+                schedule_expression=schedule,
+                completion_window=self.completion_window,
+                start_window=self.start_window,
+                delete_after=Duration.days(retentation_period_days),
+            )
+        )

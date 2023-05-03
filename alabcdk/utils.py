@@ -6,20 +6,19 @@ from inspect import signature
 from typing import Sequence
 import aws_cdk as cdk
 from constructs import Construct
-from aws_cdk import (
-    Stack
-)
+from aws_cdk import Stack
 
 _DEFAULT_LOGLEVEL = "INFO"
 
 
 def gen_name(
-        scope: Construct,
-        id: str,
-        *,
-        globalize: bool = False,
-        all_lower: bool = False,
-        clean_string: bool = False):
+    scope: Construct,
+    id: str,
+    *,
+    globalize: bool = False,
+    all_lower: bool = False,
+    clean_string: bool = False,
+):
     stack = Stack.of(scope)
     result = f"{stack.stack_name}-{id}"
 
@@ -39,7 +38,7 @@ def gen_name(
 
 
 def generate_output(scope, name: str, value):
-    cdk.CfnOutput(scope, "X"+str(uuid.uuid4()), value=f"{name}={value}")
+    cdk.CfnOutput(scope, "X" + str(uuid.uuid4()), value=f"{name}={value}")
 
 
 def stage_based_removal_policy(scope) -> cdk.RemovalPolicy:
@@ -71,15 +70,20 @@ def get_params(allvars: dict) -> dict:
     :param locals: Dictionary with local variables
     :return: Combined dictionary
     """
-    assert (allvars.get("self"))
-    assert ("kwargs" in allvars)
+    assert allvars.get("self")
+    assert "kwargs" in allvars
     kwargs = allvars.get("kwargs")
     kwargs = kwargs or {}
     cls = type(allvars["self"])
     parameters = signature(cls.__init__).parameters
-    return {**{k: v for (k, v) in allvars.items()
-            if parameters.get(k)
-            and parameters[k].kind == parameters[k].KEYWORD_ONLY}, **kwargs}
+    return {
+        **{
+            k: v
+            for (k, v) in allvars.items()
+            if parameters.get(k) and parameters[k].kind == parameters[k].KEYWORD_ONLY
+        },
+        **kwargs,
+    }
 
 
 def filter_kwargs(kwargs: dict, filter: str) -> dict:
@@ -98,7 +102,9 @@ def filter_kwargs(kwargs: dict, filter: str) -> dict:
     >>>print(filter_kwargs(d, "b_"))
     {'abc': 'abc'}
     """
-    return {k.replace(filter, "", 1): v for (k, v) in kwargs.items() if k.startswith(filter)}
+    return {
+        k.replace(filter, "", 1): v for (k, v) in kwargs.items() if k.startswith(filter)
+    }
 
 
 def remove_params(kwargs: dict, params: Sequence[str]):
@@ -116,10 +122,8 @@ def remove_params(kwargs: dict, params: Sequence[str]):
 
 
 def setup_logger(
-        *,
-        name: str = None,
-        level: int = None,
-        formatstr: str = None) -> logging.Logger:
+    *, name: str = None, level: int = None, formatstr: str = None
+) -> logging.Logger:
     logger = logging.getLogger(name)
     if level is None:
         level = logging.getLevelName(os.environ.get("LOGLEVEL", _DEFAULT_LOGLEVEL))
@@ -127,7 +131,7 @@ def setup_logger(
         logger.info(f"Handler {name} already initialized")
         return logger
 
-    formatstr = formatstr or '%(asctime)s | %(levelname)-8s | %(message)s'
+    formatstr = formatstr or "%(asctime)s | %(levelname)-8s | %(message)s"
     logger.setLevel(level)
     handler = logging.StreamHandler(sys.stderr)
     handler.name = name

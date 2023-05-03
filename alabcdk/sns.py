@@ -1,11 +1,7 @@
 from typing import Sequence, List
-from .utils import (gen_name, generate_output)
+from .utils import gen_name, generate_output
 from constructs import Construct
-from aws_cdk import (
-    aws_sns,
-    aws_sns_subscriptions,
-    aws_iam,
-    aws_lambda)
+from aws_cdk import aws_sns, aws_sns_subscriptions, aws_iam, aws_lambda
 
 
 class Topic(aws_sns.Topic):
@@ -15,21 +11,22 @@ class Topic(aws_sns.Topic):
                 receiver.add_environment(env_var_name, self.topic_arn)
 
     def __init__(
-            self,
-            scope: Construct,
-            id: str,
-            *,
-            env_var_name: str = None,
-            subscribers: Sequence[aws_lambda.Function] = None,
-            publishers: Sequence[aws_iam.IGrantable] = None,
-            **kwargs):
+        self,
+        scope: Construct,
+        id: str,
+        *,
+        env_var_name: str = None,
+        subscribers: Sequence[aws_lambda.Function] = None,
+        publishers: Sequence[aws_iam.IGrantable] = None,
+        **kwargs
+    ):
         """
         Creates a Topic and optionally adds lambda subscribers.
 
         defaults:
         - topic_name - defaults to gen_name(scope, id) if not set.
         """
-        kwargs.setdefault('topic_name', gen_name(scope, id))
+        kwargs.setdefault("topic_name", gen_name(scope, id))
         subscribers = subscribers or []
         publishers = publishers or []
 
