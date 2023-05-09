@@ -43,8 +43,8 @@ def add_arecord(
     return route53.ARecord(scope, id, zone=zone, record_name=record_name, target=target)
 
 
-def create_apigwv1_alias_target(api: api_gw.IRestApi) -> route53_targets.ApiGateway:
-    return route53_targets.ApiGateway(api)
+def create_apigwv1_alias_target(api: api_gw.IRestApi) -> route53.RecordTarget:
+    return route53.RecordTarget.from_alias(route53_targets.ApiGateway(api))
 
 
 # def get_domain_mapping_options(mapping_key: Optional[str] = None) -> api_gw2.DomainMappingOptions:
