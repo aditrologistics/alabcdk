@@ -7,6 +7,7 @@ from aws_cdk import (
     aws_route53_targets as route53_targets,
     aws_apigateway as api_gw,
     aws_apigatewayv2_alpha as api_gw2,
+    aws_apigatewayv2 as cfn_api_gw2,
     aws_apigatewayv2_integrations_alpha as _api_integrations,
     aws_apigatewayv2_authorizers_alpha as _authorizers,
 )
@@ -47,10 +48,10 @@ def create_apigwv1_alias_target(api: api_gw.IRestApi) -> route53.RecordTarget:
     return route53.RecordTarget.from_alias(route53_targets.ApiGateway(api))
 
 
-# def get_domain_mapping_options(mapping_key: Optional[str] = None) -> api_gw2.DomainMappingOptions:
-#     return api_gw2.DomainMappingOptions(
-#         domain_name=self.domain_name, mapping_key=mapping_key
-#     )
+def get_domain_mapping_options(
+    dn: api_gw2.IDomainName, mapping_key: Optional[str] = None
+) -> api_gw2.DomainMappingOptions:
+    return api_gw2.DomainMappingOptions(domain_name=dn, mapping_key=mapping_key)
 
 
 class ApiDomain(Construct):
@@ -116,11 +117,14 @@ class DataIngestionApi(Construct):
         description: str,
         api_domain: ApiDomain = None,
         domain_mapping_key: str = None,
+        domain_name: str = None,
     ) -> None:
         super().__init__(scope, construct_id)
 
         if api_domain is not None:
-            domain_mapping = api_domain.get_domain_mapping_options(domain_mapping_key)
+            domain_mapping = get_domain_mapping_options(
+                api_domain.domain_name, mapping_key=domain_mapping_key
+            )
         else:
             domain_mapping = None
 
@@ -132,6 +136,17 @@ class DataIngestionApi(Construct):
             default_domain_mapping=domain_mapping,
             disable_execute_api_endpoint=False,
         )
+        if domain_name is not None and api_domain is None:
+            api_mapping = cfn_api_gw2.CfnApiMapping(
+                self,
+                "api-mapping",
+                api_id=self._api.http_api_id,
+                domain_name=domain_name,
+                stage=self._api.default_stage.stage_name,
+                api_mapping_key=domain_mapping_key,
+            )
+            api_mapping.add_depends_on(self._api.node.default_child)
+
         if api_domain is not None:
             self.url = self._api.default_stage.domain_url
         else:
