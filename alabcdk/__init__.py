@@ -32,7 +32,7 @@ from .api import (
     DataIngestionApi,
     add_arecord,
     add_certificate,
-    add_hosted_zone,
+    fetch_hosted_zone,
     create_apigwv1_alias_target,
 )  # noqa401
 from .secret import define_db_secret  # noqa401

@@ -17,7 +17,7 @@ from constructs import Construct
 from .utils import gen_name, generate_output
 
 
-def add_hosted_zone(
+def fetch_hosted_zone(
     scope: Construct, id: str, zone_name: str, zone_id: str
 ) -> route53.IHostedZone:
     return route53.HostedZone.from_hosted_zone_attributes(
