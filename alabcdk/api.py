@@ -6,12 +6,9 @@ from aws_cdk import (
     aws_route53 as route53,
     aws_route53_targets as route53_targets,
     aws_apigateway as api_gw,
-    aws_apigatewayv2 as api_gw2,
-    aws_apigatewayv2_integrations as _api_integrations,
-    aws_apigatewayv2_authorizers as _authorizers,
     aws_apigatewayv2_alpha as api_gw2,
-    aws_apigatewayv2_authorizers_alpha as _authorizers,
     aws_apigatewayv2_integrations_alpha as _api_integrations,
+    aws_apigatewayv2_authorizers_alpha as _authorizers,
 )
 from constructs import Construct
 from .utils import gen_name, generate_output
@@ -105,7 +102,7 @@ class ApiDomain(Construct):
             ),
             zone=self.hosted_zone,
             record_name=domain_name,
-            comment=f"Alias record to map API gateway to custom domain name",
+            comment="Alias record to map API gateway to custom domain name",
         )
 
 
@@ -158,7 +155,7 @@ class DataIngestionApi(Construct):
                 response_types=[_authorizers.HttpLambdaResponseType.SIMPLE],
             )
         integration = _api_integrations.HttpLambdaIntegration(
-            f"integration-path", integration_fn
+            "integration-path", integration_fn
         )
         self._api.add_routes(
             path=path,
