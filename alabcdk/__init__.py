@@ -36,6 +36,12 @@ from .api import (
     create_apigwv1_alias_target,
 )  # noqa401
 from .secret import define_db_secret  # noqa401
+from .parameters import (
+    add_parameter,
+    fetch_parameter,
+    read_arn_parameter,
+    read_parameter,
+)  # noqa401
 
 
 class Rule(aws_events.Rule):
