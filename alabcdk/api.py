@@ -145,7 +145,7 @@ class DataIngestionApi(Construct):
                 stage=self._api.default_stage.stage_name,
                 api_mapping_key=domain_mapping_key,
             )
-            api_mapping.add_depends_on(self._api.node.default_child)
+            api_mapping.add_dependency(self._api.node.default_child)
 
         if api_domain is not None:
             self.url = self._api.default_stage.domain_url
