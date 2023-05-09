@@ -27,7 +27,14 @@ from .ssm import StringParameter  # noqa401
 from .redshift import RedshiftServerless, RedshiftCluster, Redshift  # noqa401
 from .billing import BillingAlert  # noqa401
 from .backup import BackupPlan  # noqa401
-from .data_ingestion_api import ApiDomain, DataIngestionApi  # noqa401
+from .api import (
+    ApiDomain,
+    DataIngestionApi,
+    add_arecord,
+    add_certificate,
+    add_hosted_zone,
+    create_apigwv1_alias_target,
+)  # noqa401
 from .secret import define_db_secret  # noqa401
 
 

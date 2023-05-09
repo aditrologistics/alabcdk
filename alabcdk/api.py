@@ -5,12 +5,55 @@ from aws_cdk import (
     aws_lambda as lambda_,
     aws_route53 as route53,
     aws_route53_targets as route53_targets,
+    aws_apigateway as api_gw,
+    aws_apigatewayv2 as api_gw2,
+    aws_apigatewayv2_integrations as _api_integrations,
+    aws_apigatewayv2_authorizers as _authorizers,
     aws_apigatewayv2_alpha as api_gw2,
     aws_apigatewayv2_authorizers_alpha as _authorizers,
     aws_apigatewayv2_integrations_alpha as _api_integrations,
 )
 from constructs import Construct
 from .utils import gen_name, generate_output
+
+
+def add_hosted_zone(
+    scope: Construct, id: str, zone_name: str, zone_id: str
+) -> route53.IHostedZone:
+    return route53.HostedZone.from_hosted_zone_attributes(
+        scope, id, hosted_zone_id=zone_id, zone_name=zone_name
+    )
+
+
+def add_certificate(
+    scope: Construct, id: str, domain_name: str, hosted_zone: route53.IHostedZone
+) -> acm.ICertificate:
+    return acm.Certificate(
+        scope,
+        id,
+        domain_name=domain_name,
+        validation=acm.CertificateValidation.from_dns(hosted_zone),
+    )
+
+
+def add_arecord(
+    scope: Construct,
+    id: str,
+    zone: route53.IHostedZone,
+    record_name: str,
+    target: route53.RecordTarget,
+) -> route53.ARecord:
+    return route53.ARecord(scope, id, zone=zone, record_name=record_name, target=target)
+
+
+def create_apigwv1_alias_target(api: api_gw.IRestApi) -> route53_targets.ApiGateway:
+    return route53_targets.ApiGateway(api)
+
+
+# def get_domain_mapping_options(mapping_key: Optional[str] = None) -> api_gw2.DomainMappingOptions:
+#     return api_gw2.DomainMappingOptions(
+#         domain_name=self.domain_name, mapping_key=mapping_key
+#     )
 
 
 class ApiDomain(Construct):
@@ -51,8 +94,6 @@ class ApiDomain(Construct):
             certificate=self.certificate,
         )
 
-        api_gw2.DomainName.from_domain_name_attributes()
-
         route53.ARecord(
             self,
             gen_name(self, "alias_record"),
@@ -65,13 +106,6 @@ class ApiDomain(Construct):
             zone=self.hosted_zone,
             record_name=domain_name,
             comment=f"Alias record to map API gateway to custom domain name",
-        )
-
-    def get_domain_mapping_options(
-        self, mapping_key: Optional[str] = None
-    ) -> api_gw2.DomainMappingOptions:
-        return api_gw2.DomainMappingOptions(
-            domain_name=self.domain_name, mapping_key=mapping_key
         )
 
 
