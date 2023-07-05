@@ -1,5 +1,6 @@
-from typing import TypedDict, Any, Dict
+from typing import TypedDict, Any, Dict, List, Union
 import tomli as toml
+import constructs as cons
 
 
 class ConfigOptions(TypedDict, total=False):
@@ -39,3 +40,18 @@ def load_toml_config_files(options: ConfigOptions) -> ConfigOptions:
         except FileNotFoundError:
             pass
     return config_result
+
+
+def get_context_data(
+    scope: cons.Construct, key: Union[str, List[str]]
+) -> Union[Any, None]:
+    """Get the context data for a construct"""
+    if isinstance(key, str):
+        return scope.node.try_get_context(key)
+    else:
+        context = scope.node.try_get_context(key[0])
+        for k in key[1:]:
+            if context is None:
+                break
+            context = context.get(k)
+        return context
