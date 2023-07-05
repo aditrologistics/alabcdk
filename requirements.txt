@@ -4,8 +4,8 @@ importlib-metadata
 importlib-resources
 zipp
 boto3
+tomli
 aws_cdk.aws_apigatewayv2_alpha
 aws_cdk.aws_apigatewayv2_authorizers_alpha
 aws_cdk.aws_apigatewayv2_integrations_alpha
 aws_cdk.aws_redshift_alpha
-
