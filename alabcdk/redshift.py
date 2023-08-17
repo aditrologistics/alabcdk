@@ -1,22 +1,18 @@
-import json
 from constructs import Construct
 
 import aws_cdk as cdk
 from aws_cdk import (
-    aws_ssm,
     SecretValue,
-    aws_secretsmanager,
     aws_ec2,
     aws_iam,
     aws_kms as kms,
     aws_redshift,
     aws_redshiftserverless,
-    aws_redshift,
     aws_redshift_alpha as redshift,
 )
 from typing import List, Literal
 
-from .utils import gen_name, generate_output
+from .utils import gen_name
 from .aws_cloud_resources import redshift_port_number
 
 
@@ -126,7 +122,7 @@ class RedshiftBase(Construct):
             self,
             gen_name(self, "redshift-client-sg"),
             vpc=self.vpc,
-            description=f"Membership security group for Redshift clients",
+            description="Membership security group for Redshift clients",
         )
 
     def define_security_group(
@@ -156,13 +152,13 @@ class RedshiftBase(Construct):
             result.add_ingress_rule(
                 peer=aws_ec2.Peer.security_group_id(peer_sg.security_group_id),
                 connection=aws_ec2.Port.tcp(redshift_port_number),
-                description=f"Allow connections to the redshift cluster from client membership group",
+                description="Allow connections to the redshift cluster from client membership group",
             )
         for peer_ip in ingress_peers_ipv4:
             result.add_ingress_rule(
                 peer=aws_ec2.Peer.ipv4(peer_ip),
                 connection=aws_ec2.Port.tcp(redshift_port_number),
-                description=f"Allow connections to the redshift cluster from client IP range",
+                description="Allow connections to the redshift cluster from client IP range",
             )
         return result
 
@@ -182,6 +178,7 @@ class Redshift(RedshiftBase):
         client_ip_ranges: List[str] = [],
         cluster_type: Literal["single-node", "multi-node"] = "multi-node",
         number_of_nodes: int = 2,
+        preferred_maintenance_window: str = "Wed:02:00-Wed:03:00",
         **kwargs,
     ):
         super().__init__(
@@ -224,6 +221,7 @@ class Redshift(RedshiftBase):
             node_type=redshift.NodeType.DC2_LARGE,
             number_of_nodes=None if cluster_type == "single-node" else number_of_nodes,
             security_groups=[self.security_group],
+            preferred_maintenance_window=preferred_maintenance_window,
         )
         self.cluster.apply_removal_policy(cdk.RemovalPolicy.DESTROY)
         encryption_key.grant_encrypt_decrypt(self.redshift_role)
