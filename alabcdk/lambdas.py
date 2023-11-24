@@ -33,7 +33,7 @@ class Function(aws_lambda.Function):
         kwargs.setdefault("runtime", aws_lambda.Runtime.PYTHON_3_11)
         kwargs.setdefault("timeout", Duration.seconds(3))
         kwargs.setdefault("log_retention", aws_logs.RetentionDays.FIVE_DAYS)
-        kwargs.setdefault("log_format", aws_lambda.LogFormat.JSON)
+        kwargs.setdefault("log_format", "JSON")
 
         super().__init__(scope, id, **kwargs)
 
