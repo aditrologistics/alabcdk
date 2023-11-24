@@ -43,16 +43,16 @@ def load_toml_config_files(options: ConfigOptions) -> Dict[str, Any]:
 
 
 def get_config_data(
-    config: Dict[str, Any], key: Union[str, List[str]]
+    config: Dict[str, Any], key: Union[str, List[str]], default_value: Any = None
 ) -> Union[Any, None]:
     """Get a config data item"""
     if isinstance(key, str):
-        return config.get(key)
+        return config.get(key, default_value)
     else:
         config = config.get(key[0])
         for k in key[1:]:
             if config is None:
-                break
+                return default_value
             config = config.get(k)
         return config
 
