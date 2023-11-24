@@ -11,7 +11,7 @@ class ConfigOptions(TypedDict, total=False):
     context: Dict[str, Any]
 
 
-def load_toml_config_files(options: ConfigOptions) -> ConfigOptions:
+def load_toml_config_files(options: ConfigOptions) -> Dict[str, Any]:
     """Function to implement configuration loading from TOML files.
 
     The configuration data is loaded from the following files, in order:
