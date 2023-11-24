@@ -43,7 +43,12 @@ from .parameters import (
     read_parameter,
     read_encryption_key,
 )  # noqa401
-from .config import ConfigOptions, load_toml_config_files, get_context_data
+from .config import (
+    ConfigOptions,
+    load_toml_config_files,
+    get_config_data,
+    get_context_data,
+)
 
 
 class Rule(aws_events.Rule):

@@ -42,6 +42,21 @@ def load_toml_config_files(options: ConfigOptions) -> Dict[str, Any]:
     return config_result
 
 
+def get_config_data(
+    config: Dict[str, Any], key: Union[str, List[str]]
+) -> Union[Any, None]:
+    """Get a config data item"""
+    if isinstance(key, str):
+        return config.get(key)
+    else:
+        config = config.get(key[0])
+        for k in key[1:]:
+            if config is None:
+                break
+            config = config.get(k)
+        return config
+
+
 def get_context_data(
     scope: cons.Construct, key: Union[str, List[str]]
 ) -> Union[Any, None]:
