@@ -36,7 +36,7 @@ def read_arn_parameter(
             return Arn.format(components=components, stack=stack)
         else:
             return value
-    except ssm.StringParameterNotFoundException:
+    except Exception:
         return None
 
 
