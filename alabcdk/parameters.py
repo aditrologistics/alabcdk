@@ -1,4 +1,4 @@
-from aws_cdk import aws_ssm as ssm, ArnFormat, ArnComponents, Arn, Stack
+from aws_cdk import aws_kms as kms, aws_ssm as ssm, ArnFormat, ArnComponents, Arn, Stack
 from constructs import Construct
 from typing import Union
 
@@ -42,3 +42,16 @@ def read_arn_parameter(
 
 def add_parameter(scope, id: str, *, name: str, value: str) -> ssm.StringParameter:
     return ssm.StringParameter(scope, name, parameter_name=name, string_value=value)
+
+
+def read_encryption_key(
+    scope: Construct, id: str, *, name: str
+) -> Union[kms.IKey, None]:
+    key_arn = read_arn_parameter(scope, name=name, service="kms", resource="key")
+    if key_arn is None:
+        return None
+    else:
+        try:
+            return kms.Key.from_key_arn(scope, id, key_arn)
+        except Exception:
+            return None
