@@ -10,7 +10,7 @@ def fetch_parameter(scope: Construct, id: str, *, name: str) -> ssm.StringParame
 def read_parameter(scope: Construct, name: str) -> Union[str, None]:
     try:
         return ssm.StringParameter.value_from_lookup(scope, name)
-    except ssm.StringParameterNotFoundException:
+    except Exception:
         return None
 
 
