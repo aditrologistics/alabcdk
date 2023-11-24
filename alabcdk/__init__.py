@@ -41,6 +41,7 @@ from .parameters import (
     fetch_parameter,
     read_arn_parameter,
     read_parameter,
+    read_encryption_key,
 )  # noqa401
 from .config import ConfigOptions, load_toml_config_files, get_context_data
 
