@@ -136,8 +136,8 @@ class PipLayers(Construct):
         super().__init__(scope, id)
         if not compatible_runtimes:
             compatible_runtimes = [
-                aws_lambda.Runtime.PYTHON_3_8,
-                aws_lambda.Runtime.PYTHON_3_9,
+                aws_lambda.Runtime.PYTHON_3_11,
+                aws_lambda.Runtime.PYTHON_3_12,
             ]
 
         if unpack_dir:
