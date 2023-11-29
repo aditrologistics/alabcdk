@@ -1,6 +1,6 @@
 from aws_cdk import aws_kms as kms, aws_ssm as ssm, ArnFormat, ArnComponents, Arn, Stack
 from constructs import Construct
-from typing import Union
+from typing import Union, Tuple
 
 
 def fetch_parameter(scope: Construct, id: str, *, name: str) -> ssm.StringParameter:
@@ -46,12 +46,12 @@ def add_parameter(scope, id: str, *, name: str, value: str) -> ssm.StringParamet
 
 def read_encryption_key(
     scope: Construct, id: str, *, name: str
-) -> Union[kms.IKey, None]:
+) -> Tuple[Union[kms.IKey, None], Union[str, None]]:
     key_arn = read_arn_parameter(scope, name=name, service="kms", resource="key")
     if key_arn is None:
-        return None
+        return None, f"Could not read value from {name}"
     else:
         try:
-            return kms.Key.from_key_arn(scope, id, key_arn)
-        except Exception:
-            return None
+            return kms.Key.from_key_arn(scope, id, key_arn), None
+        except Exception as e:
+            return None, f"Could not get encryption key: {str(e)}"
