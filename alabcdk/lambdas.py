@@ -266,7 +266,7 @@ class PipLayers(Construct):
                     logger.debug(f"Deleting {auxdir}")
                     try:
                         shutil.rmtree(auxdir)
-                    except Exception as e:
+                    except FileNotFoundError as e:
                         logger.debug(
                             f"Failed to delete {auxdir} due to {e}, skipping.."
                         )
