@@ -264,7 +264,13 @@ class PipLayers(Construct):
                 auxdirs = glob.glob(f"{fullname}-*")
                 for auxdir in auxdirs:
                     logger.debug(f"Deleting {auxdir}")
-                    shutil.rmtree(auxdir)
+                    try:
+                        shutil.rmtree(auxdir)
+                    except Exception as e:
+                        logger.debug(
+                            f"Failed to delete {auxdir} due to {e}, skipping.."
+                        )
+
                 if d in self.force_exclude_packages:
                     reason = "excluded by request"
                 else:
