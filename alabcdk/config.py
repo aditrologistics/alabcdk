@@ -1,6 +1,7 @@
 from typing import TypedDict, Any, Dict, List, Union
 import tomli as toml
 import constructs as cons
+from deepmerge import always_merger
 
 
 class ConfigOptions(TypedDict, total=False):
@@ -36,7 +37,7 @@ def load_toml_config_files(options: ConfigOptions) -> Dict[str, Any]:
     for config_path in config_paths:
         try:
             with open(config_path, "rb") as f:
-                config_result.update(toml.load(f))
+                config_result = always_merger.merge(config_result, toml.load(f))
         except FileNotFoundError:
             pass
     return config_result
