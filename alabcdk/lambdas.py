@@ -261,7 +261,7 @@ class PipLayers(Construct):
                 fullname = os.path.join(root_dir, d)
                 try:
                     shutil.rmtree(fullname)
-                except FileNotFoundError as e:
+                except Exception as e:
                     logger.debug(f"Failed to delete {fullname} due to {e}, skipping..")
                 # While we're at it, delete the dist-directory
                 auxdirs = glob.glob(f"{fullname}-*")
@@ -269,7 +269,7 @@ class PipLayers(Construct):
                     logger.debug(f"Deleting {auxdir}")
                     try:
                         shutil.rmtree(auxdir)
-                    except FileNotFoundError as e:
+                    except Exception as e:
                         logger.debug(
                             f"Failed to delete {auxdir} due to {e}, skipping.."
                         )
