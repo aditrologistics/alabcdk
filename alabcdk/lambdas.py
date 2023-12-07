@@ -259,7 +259,10 @@ class PipLayers(Construct):
 
             if count == len(preexisting_packages) or d in self.force_exclude_packages:
                 fullname = os.path.join(root_dir, d)
-                shutil.rmtree(fullname)
+                try:
+                    shutil.rmtree(fullname)
+                except FileNotFoundError as e:
+                    logger.debug(f"Failed to delete {fullname} due to {e}, skipping..")
                 # While we're at it, delete the dist-directory
                 auxdirs = glob.glob(f"{fullname}-*")
                 for auxdir in auxdirs:
